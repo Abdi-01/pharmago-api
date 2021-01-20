@@ -1,23 +1,27 @@
-const db = require('../database');
-const { asyncQuery } = require('../helpers/asyncQuery');
+const pool = require('../db')
 
-module.exports = {
-  getProducts: async (req, res) => {
-    // console.log('req', req.query.keywordSearch.length);
-    const { keywordSearch } = req.query;
-    try {
-      let sqlGet =
-        keywordSearch != undefined
-          ? `SELECT * FROM tbproduct WHERE name LIKE "${keywordSearch}%"`
-          : `SELECT * FROM tbproduct`;
+module.exports = ({
+    getProducts: (req, res) => {
+        console.log('getProducts req.query: ', req.query.idproduct)
+        console.log('getProducts req.query: ', req.query.category)
 
-      let results = await asyncQuery(sqlGet);
-      res
-        .status(200)
-        .send({ messages: 'Get products was successful', products: results });
-    } catch (error) {
-      console.log(error);
-      res.status(500).send({ messages: 'Get products failed', errors: true });
+        let sqlJoin = `tbp.*, tbc.* FROM tbproduct tbp JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
+                        JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory`
+        let sqlGet = ''
+
+        if (req.query.idproduct) {
+            sqlGet = `SELECT ${sqlJoin} WHERE tbp.idproduct = ${req.query.idproduct};`
+        } else if (req.query.category) {
+            sqlGet = `SELECT ${sqlJoin} WHERE tbc.category = ${req.query.category};`
+        } else {
+            sqlGet = `SELECT ${sqlJoin};`
+        }
+
+
+        pool.query(sqlGet, (err, results) => {
+            if (err) res.status(500).send(err)
+
+            res.status(200).send({products: results})
+        })
     }
-  },
-};
+})
