@@ -1,38 +1,40 @@
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
-const bearerToken = require('express-bearer-token');
-const db = require('./database');
-const { productsRouter, usersRouter } = require('./routers');
-
-const app = express();
+const cors = require('cors'); // memberikan atau menolak akses, middleware
+const bodyParser = require('body-parser'); //membaca body/data dari user request
+const bearerToken = require('express-bearer-token'); // Agar secret key (token) tidak kelihatan
 const PORT = 5000;
+const App = express();
 
-db.getConnection((err) => {
-  if (err) {
-    console.log(`error connecting:${err.stack} `);
-  }
-  console.log(`Database connection is going well :) `);
+
+App.use(cors()) // jika tidak disetting lagi, berarti semua bisa mengakses
+App.use(bodyParser.json()) // bisa juga begini jika data dipastikan berbentuk object
+App.use(bearerToken())
+
+// didahulukan menginstal multer : npm install --save multer
+// Static : Middleware menjalankan function untuk memberi akses pada folder didalam directory storage
+App.use(express.static('public'))
+
+
+const pool = require('./db');
+pool.getConnection(function (err) {
+    if (err) {
+        console.error('error connecting: ' + err.stack)
+        // return;
+    }
+
+    console.log('database connection is running');
 });
 
-app.use(
-  bodyParser.urlencoded({
-    extended: true,
-  })
-);
+const { productsRouter, cartRouter } = require('./routers');
 
-app.use(bodyParser.json());
-app.use(cors());
+App.get('/', (req, res) => {
+    res.status(200).send('Selamat Datang')
+})
 
-app.use(bearerToken());
 
-app.use(express.static('public'));
+// App.use('/users', usersRouter)
+App.use('/products', productsRouter)
+App.use('/cart', cartRouter)
+// App.use('/files', uploadRouter)
 
-app.get('/', (req, res) => {
-  res.status(200).send('rest api');
-});
-
-app.use('/products', productsRouter);
-app.use('/users', usersRouter);
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+App.listen(PORT, () => console.log('Server running on Port :', PORT))
