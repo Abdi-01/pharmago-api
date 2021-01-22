@@ -1,5 +1,5 @@
 const pool = require('../db')
-
+const { asyncQuery } = require('../helpers/asyncQuery');
 module.exports = ({
     getProducts: (req, res) => {
         console.log('getProducts req.query.idproduct: ', req.query.idproduct)
@@ -21,7 +21,7 @@ module.exports = ({
         pool.query(sqlGet, (err, results) => {
             if (err) res.status(500).send(err)
 
-            res.status(200).send({products: results})
+            res.status(200).send({ products: results })
         })
     },
     getCategory: (req, res) => {
@@ -30,7 +30,25 @@ module.exports = ({
         pool.query(sqlGet, (err, results) => {
             if (err) res.status(500).send(err)
 
-            res.status(200).send({category: results})
+            res.status(200).send({ category: results })
         })
+    },
+    getProductSearch: async (req, res) => {
+        // console.log('req', req.query.keywordSearch.length);
+        const { keyword } = req.query;
+        try {
+            let sqlGet =
+                keyword != undefined
+                    ? `SELECT * FROM tbproduct WHERE name LIKE "${keyword}%"`
+                    : `SELECT * FROM tbproduct`;
+
+            let results = await asyncQuery(sqlGet);
+            res
+                .status(200)
+                .send({ messages: 'Get products was successful', products: results });
+        } catch (error) {
+            console.log(error);
+            res.status(500).send({ messages: 'Get products failed', errors: true });
+        }
     }
 })
