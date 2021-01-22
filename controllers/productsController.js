@@ -4,11 +4,11 @@ const { asyncQuery } = require('../helpers/asyncQuery');
 module.exports = {
   getProducts: async (req, res) => {
     // console.log('req', req.query.keywordSearch.length);
-    const { keywordSearch } = req.query;
+    const { keyword } = req.query;
     try {
       let sqlGet =
-        keywordSearch != undefined
-          ? `SELECT * FROM tbproduct WHERE name LIKE "${keywordSearch}%"`
+        keyword != undefined
+          ? `SELECT * FROM tbproduct WHERE name LIKE "${keyword}%"`
           : `SELECT * FROM tbproduct`;
 
       let results = await asyncQuery(sqlGet);
