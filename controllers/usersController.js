@@ -1,4 +1,4 @@
-const db = require('../database');
+const db = require('../db');
 const { asyncQuery } = require('../helpers/asyncQuery');
 const { createJWTToken } = require('../helpers/tokenCreate');
 const hbs = require('nodemailer-express-handlebars');

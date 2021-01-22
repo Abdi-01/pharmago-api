@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const bearerToken = require('express-bearer-token');
-const db = require('./database');
+const db = require('./db');
 const { productsRouter, usersRouter } = require('./routers');
 
 const app = express();

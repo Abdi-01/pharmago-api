@@ -1,4 +1,4 @@
-const db = require('../database');
+const db = require('../db');
 const { asyncQuery } = require('../helpers/asyncQuery');
 
 module.exports = {
