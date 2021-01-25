@@ -5,14 +5,16 @@ module.exports = ({
         console.log('getProducts req.query.idproduct: ', req.query.idproduct)
         console.log('getProducts req.query.idcategory: ', req.query.idcategory)
 
-        let sqlJoin = `tbp.*, tbc.* FROM tbproduct tbp JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
-                        JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory`
+        let sqlJoin = `tbp.*, tbps.*, tbc.* FROM tbproduct tbp JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
+                        JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
+                        JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory
+                        WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum'`
         let sqlGet = ''
 
         if (req.query.idproduct) {
-            sqlGet = `SELECT ${sqlJoin} WHERE tbp.idproduct = ${req.query.idproduct};`
+            sqlGet = `SELECT ${sqlJoin} AND tbp.idproduct = ${req.query.idproduct};`
         } else if (req.query.idcategory) {
-            sqlGet = `SELECT ${sqlJoin} WHERE tbc.idcategory = ${req.query.idcategory};`
+            sqlGet = `SELECT ${sqlJoin} AND tbc.idcategory = ${req.query.idcategory};`
         } else {
             sqlGet = `SELECT ${sqlJoin};`
         }
@@ -24,6 +26,21 @@ module.exports = ({
             res.status(200).send({ products: results })
         })
     },
+    getCustomProducts: async (req, res) => {
+        try {
+            let sqlGet = `SELECT tbp.idproduct, tbp.name, tbps.* FROM tbproduct tbp JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
+            WHERE tbps.status = 'ready' AND tbps.type_obat = 'racik';`
+
+            let results = await asyncQuery(sqlGet)
+
+            res
+                .status(200)
+                .send({ customProducts: results });
+        } catch (error) {
+            console.log(error);
+            res.status(500).send({ message: 'Get products failed'});
+        }
+    }, 
     getCategory: (req, res) => {
         let sqlGet = `SELECT * FROM tbcategory;`
 

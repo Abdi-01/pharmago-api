@@ -197,4 +197,19 @@ module.exports = {
       res.status(500).send(error);
     }
   },
+
+  getDefaultAddress: async (req, res) => {
+    try {
+      console.log('cekgetdefaultadress params: ', req.params.iduser)
+      const { iduser } = req.params;
+      let sqlGet = `SELECT * FROM tbuser_address tbua JOIN tbuser tbu ON tbua.iduser = tbu.iduser
+                  WHERE tbu.iduser = ${iduser};`
+      let results = await asyncQuery(sqlGet)
+
+      res.status(200).send({defaultAddress: results})
+    } catch (error) {
+      console.log(error)
+      res.status(500).send(error);
+    }
+  }
 };

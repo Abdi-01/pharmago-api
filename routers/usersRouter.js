@@ -7,5 +7,6 @@ router.post('/login', usersController.loginUser);
 router.post('/forgot-password', usersController.forgotPassword);
 router.post('/reset-password', usersController.resetPassword);
 router.get('/keep-login', readToken, usersController.keepLogin);
+router.get('/defaultAddress/:iduser', usersController.getDefaultAddress);
 
 module.exports = router;
