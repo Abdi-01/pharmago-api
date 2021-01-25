@@ -1,6 +1,6 @@
 const mysql = require('mysql2');
 
-const db = mysql.createPool({
+const pool = mysql.createPool({
   connectionLimit: 100,
   host: '128.199.143.20',
   port: 3306,
@@ -9,4 +9,4 @@ const db = mysql.createPool({
   database: 'db_pharmago',
 });
 
-module.exports = db;
+module.exports = pool;
