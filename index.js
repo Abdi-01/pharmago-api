@@ -23,16 +23,21 @@ pool.getConnection(function (err) {
   console.log('database connection is running');
 });
 
-const { productsRouter, cartRouter, usersRouter, transactionsRouter } = require('./routers');
+const {
+  productsRouter,
+  cartRouter,
+  usersRouter,
+  transactionsRouter,
+} = require('./routers');
 
 App.get('/', (req, res) => {
   res.status(200).send('Selamat Datang');
 });
 
-App.use('/users', usersRouter)
-App.use('/products', productsRouter)
-App.use('/cart', cartRouter)
-App.use('/transactions', transactionsRouter)
+App.use('/users', usersRouter);
+App.use('/products', productsRouter);
+App.use('/cart', cartRouter);
+App.use('/transactions', transactionsRouter);
 // App.use('/files', uploadRouter)
 
 App.listen(PORT, () => console.log('Server running on Port :', PORT));

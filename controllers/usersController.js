@@ -4,6 +4,7 @@ const { createJWTToken } = require('../helpers/tokenCreate');
 const hbs = require('nodemailer-express-handlebars');
 const transporter = require('../helpers/sendEmail');
 const Crypto = require('crypto');
+const { nextTick } = require('process');
 
 module.exports = {
   registerUser: async (req, res) => {
@@ -158,7 +159,7 @@ module.exports = {
       let hashPassword = Crypto.createHmac('sha256', 'xxQWd#@')
         .update(password)
         .digest('hex');
-        console.log('mas alx',hashPassword)
+      console.log('mas alx', hashPassword);
 
       let sqlGetAll = `SELECT * FROM tbuser`;
       let sqlGet = `SELECT *  FROM tbuser 
@@ -216,6 +217,11 @@ module.exports = {
           }
         }
       } else {
+        let err = {
+          code: 400,
+          message: 'Email anda belum terdaftar',
+          error: true,
+        };
         res.status(401).send({
           message: 'Email anda belum terdaftar',
           error: true,
@@ -223,7 +229,7 @@ module.exports = {
       }
     } catch (error) {
       console.log(error);
-      res.status(500).send({ message: 'Login gagal' });
+      res.status(500).send({ message: 'Login gagal', error: true });
     }
   },
 
@@ -356,15 +362,15 @@ module.exports = {
   },
   getDefaultAddress: async (req, res) => {
     try {
-      console.log('cekgetdefaultadress params: ', req.params.iduser)
+      console.log('cekgetdefaultadress params: ', req.params.iduser);
       const { iduser } = req.params;
       let sqlGet = `SELECT * FROM tbuser_address tbua JOIN tbuser tbu ON tbua.iduser = tbu.iduser
-                  WHERE tbu.iduser = ${iduser};`
-      let results = await asyncQuery(sqlGet)
+                  WHERE tbu.iduser = ${iduser};`;
+      let results = await asyncQuery(sqlGet);
 
-      res.status(200).send({ defaultAddress: results })
+      res.status(200).send({ defaultAddress: results });
     } catch (error) {
-      console.log(error)
+      console.log(error);
       res.status(500).send(error);
     }
   },
