@@ -4,7 +4,6 @@ const { createJWTToken } = require('../helpers/tokenCreate');
 const hbs = require('nodemailer-express-handlebars');
 const transporter = require('../helpers/sendEmail');
 const Crypto = require('crypto');
-const { nextTick } = require('process');
 
 module.exports = {
   registerUser: async (req, res) => {
@@ -72,7 +71,7 @@ module.exports = {
           dataUserAddress
         );
 
-        console.log('check results address', resultsAddress);
+        // console.log('check results address', resultsAddress);
 
         let sqlGetUser = `SELECT * FROM tbuser WHERE iduser=${results.insertId}`;
         let resultGetUser = await asyncQuery(sqlGetUser);
@@ -95,7 +94,7 @@ module.exports = {
             isActive,
           });
 
-          console.log('check token', token);
+          // console.log('check token', token);
 
           // handlebar setting
           const handlebarsOption = {
