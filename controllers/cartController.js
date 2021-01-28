@@ -1,13 +1,13 @@
-const pool = require('../db')
+const pool = require('../db');
 const { asyncQuery } = require('../helpers/asyncQuery');
 
-module.exports = ({
+module.exports = {
     addCart: (req, res) => {
-        console.log('addcart req.body: ', req.body)
-        let sqlInsert = `INSERT into tbcart SET ?`
+        console.log('addcart req.body: ', req.body);
+        let sqlInsert = `INSERT into tbcart SET ?`;
 
         pool.query(sqlInsert, req.body, (err, results) => {
-            if (err) console.log(err)
+            if (err) console.log(err);
 
             res.status(200).send({ message: "Add to Cart Success" })
         })
@@ -41,7 +41,7 @@ module.exports = ({
 
                 pool.query(sqlAddDetail + data.toString(), (err2, results2) => {
                     if (err2) {
-                        console.log( err2)
+                        console.log(err2)
                         res.status(500).send(err2)
                     }
                     console.log('cek results2: ', results2)
@@ -59,24 +59,24 @@ module.exports = ({
             JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
             JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory
             WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum' AND tbca.isActive = 1                             
-            AND tbca.iduser = ${req.user.iduser};`
+            AND tbca.iduser = ${req.user.iduser}; `;
 
             let results = await asyncQuery(sqlGet);
-
-            res.status(200).send({ cartUser: results })
+            console.log('==>', results);
+            res.status(200).send({ cartUser: results });
         } catch (error) {
             console.log(error);
-            res.status(500).send(error);
+            res.status(500).send({ message: 'success', error: true });
         }
     },
     getCustomCart: async (req, res) => {
         console.log('cek iduser getcustomcart controller: ', req.user.iduser)
         try {
-            let sqlGet = `SELECT * FROM tbcartCustom tbcc JOIN tbcartCustom_detail tbccd 
-            ON tbcc.idcartCustom = tbccd.idcartCustom
-            JOIN tbproduct tbp ON tbp.idproduct = tbccd.idproduct
-            WHERE tbcc.isActive = 1                          
-            AND tbcc.iduser = ${req.user.iduser};`
+            let sqlGet = `SELECT * FROM tbcartCustom tbcc JOIN tbcartCustom_detail tbccd
+ON tbcc.idcartCustom = tbccd.idcartCustom
+JOIN tbproduct tbp ON tbp.idproduct = tbccd.idproduct
+WHERE tbcc.isActive = 1
+AND tbcc.iduser = ${req.user.iduser}; `
 
             let results = await asyncQuery(sqlGet);
 
@@ -87,16 +87,13 @@ module.exports = ({
         }
     },
     deleteCart: async (req, res) => {
-        console.log('cek idcart deleteCart controller: ', req.params.idcart)
-
         try {
-            let sqlDel = `DELETE FROM tbcart WHERE idcart = ${req.params.idcart};`
-
+            console.log('cek idcart deleteCart controller: ', req.params.idcart)
             let results = await asyncQuery(sqlDel);
 
-            res.status(200).send({ message: 'Delete Cart Success' })
+            res.status(200).send({ message: 'Delete Cart Success' });
         } catch (error) {
-            console.log(error)
+            console.log(error);
             res.status(500).send(error);
         }
     },
@@ -104,8 +101,8 @@ module.exports = ({
         console.log('cek idcustomcart delete controller: ', req.params.idcartCustom)
 
         try {
-            let sqlDel1 = `DELETE FROM tbcartCustom WHERE idcartCustom = ${req.params.idcartCustom} ;`
-            let sqlDel2 = `DELETE FROM tbcartCustom_detail WHERE idcartCustom = ${req.params.idcartCustom} ;`
+            let sqlDel1 = `DELETE FROM tbcartCustom WHERE idcartCustom = ${req.params.idcartCustom}; `
+            let sqlDel2 = `DELETE FROM tbcartCustom_detail WHERE idcartCustom = ${req.params.idcartCustom}; `
 
             let results1 = await asyncQuery(sqlDel1)
             let results2 = await asyncQuery(sqlDel2)
@@ -119,18 +116,18 @@ module.exports = ({
     updateCart: (req, res) => {
         console.log('cek req.body updatecart: ', req.body, req.params.idcart)
         let sqlget = `SELECT * FROM tbcart tbc JOIN tbproduct_stock tbps ON tbc.idproduct = tbps.idproduct
-                        WHERE tbc.idcart = ${req.params.idcart};`
+WHERE tbc.idcart = ${req.params.idcart}; `
 
         pool.query(sqlget, (err1, results1) => {
             if (err1) res.status(500).send(err)
             let sqlGet2 = `SELECT tbp.*, tbps.*, tbc.*, tbca.* FROM tbproduct tbp JOIN tbcart tbca ON tbp.idproduct = tbca.idproduct
-                        JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
-                        JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
-                        JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory
-                        WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum' AND tbca.isActive = 1                             
-                        AND tbca.iduser = ${results1[0].iduser};`
+JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
+JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
+JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory
+WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum' AND tbca.isActive = 1
+AND tbca.iduser = ${results1[0].iduser}; `
             if (req.body.qty > 0 && req.body.qty <= results1[0].stock_pcs) {
-                let sqlUpdate = `UPDATE tbcart SET qty = ${req.body.qty} WHERE idcart = ${req.params.idcart};`
+                let sqlUpdate = `UPDATE tbcart SET qty = ${req.body.qty} WHERE idcart = ${req.params.idcart}; `
 
                 pool.query(sqlUpdate, (err2, results2) => {
                     if (err2) res.status(500).send(err2)
@@ -147,7 +144,7 @@ module.exports = ({
     },
     updateNote: async (req, res) => {
         try {
-            let sqlUpdate = `UPDATE tbcart SET note = ${req.body.note} WHERE idcart = ${req.params.idcart};`
+            let sqlUpdate = `UPDATE tbcart SET note = ${req.body.note} WHERE idcart = ${req.params.idcart}; `
             let results = await asyncQuery(sqlUpdate);
 
             // res.status(200).send({ cartUser: results })
@@ -157,5 +154,4 @@ module.exports = ({
             res.status(500).send(error);
         }
     }
-
-})
+}
