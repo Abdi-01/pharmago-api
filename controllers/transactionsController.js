@@ -4,6 +4,7 @@ const { asyncQuery } = require('../helpers/asyncQuery');
 module.exports = ({
     addTransaction: (req, res) => {
         console.log("addTransaction req.body: ", req.body)
+        let transaction_type = req.body.transaction_type
         let abjad = "abcdefghijklmnopqrstuvwxyz".toUpperCase();
         let angka = "1234567890";
         let varRandom = abjad + angka;
@@ -15,13 +16,13 @@ module.exports = ({
         let tanggal = new Date().getDay()
         let bulan = new Date().getMonth()
         let tahun = new Date().getFullYear()
-        let invoice = `INV/CO/${tahun}${bulan}${tanggal}/${req.body.checkout[0].iduser}${pool.escape(req.body.idcart[0])}/${number}`
+        let invoice = `INV/${transaction_type}/${tahun}${bulan}${tanggal}/${req.body.checkout[0].iduser}${pool.escape(req.body.idcart[0])}/${number}`
 
         console.log("invoice: ", invoice)
         console.log("query sqlAdd: ", req.body.checkout[0].iduser, invoice)
 
         let sqlAdd = `INSERT INTO tbtransaction (iduser, invoice_number, ongkir, total_payment, iduser_address, transaction_type) 
-        VALUES ( ${req.body.checkout[0].iduser}, ${pool.escape(invoice)}, ${pool.escape(req.body.ongkir)}, ${pool.escape(req.body.total_payment)}, ${pool.escape(req.body.iduser_address)}, 'CO' )`
+        VALUES ( ${req.body.checkout[0].iduser}, ${pool.escape(invoice)}, ${pool.escape(req.body.ongkir)}, ${pool.escape(req.body.total_payment)}, ${pool.escape(req.body.iduser_address)}, ${pool.escape(transaction_type)} )`
 
         pool.query(sqlAdd, (err1, results1) => {
             if (err1) res.status(500).send(err1)
@@ -33,10 +34,28 @@ module.exports = ({
                 let data = []
                 let getIdProduct = []
 
-                req.body.checkout.forEach((item, index) => {
-                    data.push(`(null, ${pool.escape(results1.insertId)}, ${pool.escape(item.idproduct)}, ${pool.escape(item.qty)}, null, ${pool.escape(item.total_price)}, ${pool.escape(item.note)} )`)
-                    getIdProduct.push(`${pool.escape(item.idproduct)}`)
-                })
+                if (transaction_type === 'QO') {
+                    req.body.checkout.forEach((item, index) => {
+                        data.push(`(null, ${pool.escape(results1.insertId)}, ${pool.escape(item.idproduct)}, null, ${pool.escape(item.qty_qo)}, ${pool.escape(item.total_price)}, ${pool.escape(item.note)} )`)
+                        getIdProduct.push(`${pool.escape(item.idproduct)}`)
+                    })
+                } else if (transaction_type === 'CO') {
+                    req.body.checkout.forEach((item, index) => {
+                        data.push(`(null, ${pool.escape(results1.insertId)}, ${pool.escape(item.idproduct)}, ${pool.escape(item.qty_co)}, null, ${pool.escape(item.total_price)}, ${pool.escape(item.note)} )`)
+                        getIdProduct.push(`${pool.escape(item.idproduct)}`)
+                    })
+                } else if (transaction_type === 'ALL') {
+                    req.body.checkout.forEach((item, index) => {
+                        data.push(`(null, ${pool.escape(results1.insertId)}, ${pool.escape(item.idproduct)}, null, ${pool.escape(item.qty_qo)}, ${pool.escape(item.total_price)}, ${pool.escape(item.note)} )`)
+                        getIdProduct.push(`${pool.escape(item.idproduct)}`)
+                    })
+                    req.body.checkoutcustom.forEach((item, index) => {
+                        data.push(`(null, ${pool.escape(results1.insertId)}, ${pool.escape(item.idproduct)}, ${pool.escape(item.qty_co)}, null, ${pool.escape(item.total_price)}, ${pool.escape(item.note)} )`)
+                        getIdProduct.push(`${pool.escape(item.idproduct)}`)
+                    })
+                }
+
+
                 console.log("datatostring: ", data.toString())
                 console.log("getIDproduct stock: ", getIdProduct.toString())
 
@@ -71,12 +90,40 @@ module.exports = ({
 
                         results3.forEach((item, index) => {
                             let stockBaru = 0
-                            req.body.checkout.forEach((element, id) => {
-                                if (item.idproduct === element.idproduct) {
-                                    stockBaru = (item.stock_pcs - element.qty)
-                                }
-                            })
-                            update.push(`(${pool.escape(item.idproduct_stock)}, ${pool.escape(item.idproduct)}, ${pool.escape(stockBaru)}, ${pool.escape(item.qty_per_pcs)}, ${pool.escape(item.satuan)}, ${pool.escape(item.total_stock_satuan)}, ${pool.escape(item.price_pcs)}, ${pool.escape(item.price_per_satuan)}, ${pool.escape(item.status)}, ${pool.escape(item.type_obat)} )`)
+                            let stockSatuanBaru = 0
+                            if (transaction_type === 'QO') {
+                                req.body.checkout.forEach((element, id) => {
+                                    if (item.idproduct === element.idproduct) {
+                                        stockBaru = (item.stock_pcs - element.qty_qo)
+                                    }
+                                })
+                                update.push(`(${pool.escape(item.idproduct_stock)}, ${pool.escape(item.idproduct)}, ${pool.escape(stockBaru)}, ${pool.escape(item.qty_per_pcs)}, ${pool.escape(item.satuan)}, ${pool.escape(item.total_stock_satuan)}, ${pool.escape(item.price_pcs)}, ${pool.escape(item.price_per_satuan)}, ${pool.escape(item.status)}, ${pool.escape(item.type_obat)} )`)
+                            } else if (transaction_type === 'CO') {
+                                req.body.checkout.forEach((element, id) => {
+                                    if (item.idproduct === element.idproduct) {
+                                        stockSatuanBaru = (item.total_stock_satuan - element.qty_co)
+                                        stockBaru = parseFloat(stockSatuanBaru / item.qty_per_pcs)
+                                    }
+                                })
+                                update.push(`(${pool.escape(item.idproduct_stock)}, ${pool.escape(item.idproduct)}, ${pool.escape(stockBaru)}, ${pool.escape(item.qty_per_pcs)}, ${pool.escape(item.satuan)}, ${pool.escape(stockSatuanBaru)}, ${pool.escape(item.price_pcs)}, ${pool.escape(item.price_per_satuan)}, ${pool.escape(item.status)}, ${pool.escape(item.type_obat)} )`)
+                            } else if (transaction_type === 'ALL') {
+                                // cart umum
+                                req.body.checkout.forEach((element, id) => {
+                                    if (item.idproduct === element.idproduct) {
+                                        stockBaru = (item.stock_pcs - element.qty_qo)
+                                        update.push(`(${pool.escape(item.idproduct_stock)}, ${pool.escape(item.idproduct)}, ${pool.escape(stockBaru)}, ${pool.escape(item.qty_per_pcs)}, ${pool.escape(item.satuan)}, ${pool.escape(item.total_stock_satuan)}, ${pool.escape(item.price_pcs)}, ${pool.escape(item.price_per_satuan)}, ${pool.escape(item.status)}, ${pool.escape(item.type_obat)} )`)
+                                    }
+                                })
+                                // cart racik
+                                req.body.checkoutcustom.forEach((element, id) => {
+                                    if (item.idproduct === element.idproduct) {
+                                        stockSatuanBaru = (item.total_stock_satuan - element.qty_co)
+                                        stockBaru = parseFloat(stockSatuanBaru / item.qty_per_pcs)
+                                        update.push(`(${pool.escape(item.idproduct_stock)}, ${pool.escape(item.idproduct)}, ${pool.escape(stockBaru)}, ${pool.escape(item.qty_per_pcs)}, ${pool.escape(item.satuan)}, ${pool.escape(stockSatuanBaru)}, ${pool.escape(item.price_pcs)}, ${pool.escape(item.price_per_satuan)}, ${pool.escape(item.status)}, ${pool.escape(item.type_obat)} )`)
+                                    }
+                                })
+
+                            }
                         })
 
                         console.log('cek query update stock: ', update.toString())
@@ -86,12 +133,32 @@ module.exports = ({
                         pool.query(sqlReduceStock1 + update.toString() + sqlReduceStock2, (err4, results4) => {
                             if (err4) res.status(500).send(err4)
 
-                            let sqlDel = `UPDATE tbcart SET isActive = 0 WHERE idcart IN (${req.body.idcart.map(e => e = `(${e})`).toString()})`
+                            let sqlDel = ``
+                            let sqlDel2 = ``
+
+                            if (transaction_type === 'QO') {
+                                sqlDel = `UPDATE tbcart SET isActive = 0 WHERE idcart IN (${req.body.idcart.map(e => e = `(${e})`).toString()})`
+                            } else if (transaction_type === 'CO') {
+                                sqlDel = `UPDATE tbcartCustom SET isActive = 0 WHERE idcartCustom = ${req.body.idcart};`
+                            } else if (transaction_type === 'ALL') {
+                                sqlDel = `UPDATE tbcart SET isActive = 0 WHERE idcart IN (${req.body.idcart.map(e => e = `(${e})`).toString()})`
+                                sqlDel2 = `UPDATE tbcartCustom SET isActive = 0 WHERE idcartCustom = ${req.body.idcartCustom};`
+                            }
 
                             pool.query(sqlDel, (err5, results5) => {
                                 if (err5) res.status(500).send(err5)
-                                
-                                res.status(200).send({ message: "Transaction Success", idpayment: results1.insertId, success: true, error: null })
+
+                                if (transaction_type === 'ALL') {
+                                    pool.query(sqlDel2, (err6, results6) => {
+                                        if (err6) res.status(500).send(err6)
+
+                                        console.log('addtransaction test log ALL')
+                                        res.status(200).send({ message: "Transaction Success", idpayment: results1.insertId, success: true, error: null })
+                                    })
+                                } else {
+                                    console.log('addtransaction test log non ALL')
+                                    res.status(200).send({ message: "Transaction Success", idpayment: results1.insertId, success: true, error: null })
+                                }
                             })
                         })
                     })

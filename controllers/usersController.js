@@ -356,8 +356,8 @@ module.exports = {
   },
   getDefaultAddress: async (req, res) => {
     try {
-      console.log('cekgetdefaultadress params: ', req.params.iduser)
-      const { iduser } = req.params;
+      console.log('cekgetdefaultadress params: ', req.user.iduser)
+      const { iduser } = req.user;
       let sqlGet = `SELECT * FROM tbuser_address tbua JOIN tbuser tbu ON tbua.iduser = tbu.iduser
                   WHERE tbu.iduser = ${iduser};`
       let results = await asyncQuery(sqlGet)

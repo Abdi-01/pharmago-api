@@ -8,7 +8,7 @@ router.post('/login', usersController.loginUser);
 router.post('/forgot-password', usersController.forgotPassword);
 router.post('/reset-password', usersController.resetPassword);
 router.get('/keep-login', readToken, usersController.keepLogin);
-router.get('/defaultAddress/:iduser', usersController.getDefaultAddress);
+router.get('/defaultAddress', readToken, usersController.getDefaultAddress);
 router.patch('/account-verify', readToken, usersController.accountVerify);
 
 module.exports = router;
