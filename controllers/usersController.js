@@ -201,9 +201,11 @@ module.exports = {
                 role,
                 isActive,
               });
+
+              console.log('check result ====> ', results[0]);
               res.status(200).send({
                 message: 'Login berhasil',
-                user: results,
+                user: results[0],
                 token,
                 error: false,
               });
@@ -254,7 +256,7 @@ module.exports = {
               extName: '.html',
               partialsDir: './template',
               layoutsDir: './template',
-              defaultLayout: 'template.html',
+              defaultLayout: 'resetPassword.html',
             },
             viewPath: './template',
             extName: '.html',
@@ -265,7 +267,7 @@ module.exports = {
             from: 'PharmaGO<maulana4de@gmail.com>',
             to: email,
             subject: `Request Reset Password `,
-            template: 'template', // nama file html
+            template: 'resetPassword', // nama file html
             context: {
               name: name,
               link: `http://localhost:3000/reset-password/${iduser}`,
@@ -331,10 +333,11 @@ module.exports = {
   keepLogin: async (req, res) => {
     try {
       const { iduser } = req.user;
+      console.log('check keepLogin', iduser);
       let sqlGet = `SELECT *
                         FROM tbuser
                         WHERE iduser = ${iduser}`;
-      if (iduser != null) {
+      if (iduser) {
         let results = await asyncQuery(sqlGet);
 
         let { iduser, name, email, handphone, role, isActive } = results[0];
@@ -349,7 +352,7 @@ module.exports = {
         });
         res.status(200).send({
           message: 'Keep Login berhasil',
-          user: results,
+          user: results[0],
           token,
           error: false,
         });
@@ -361,7 +364,7 @@ module.exports = {
   },
   getDefaultAddress: async (req, res) => {
     try {
-      console.log('cekgetdefaultadress params: ', req.user.iduser)
+      console.log('cekgetdefaultadress params: ', req.user.iduser);
       const { iduser } = req.user;
       let sqlGet = `SELECT * FROM tbuser_address tbua JOIN tbuser tbu ON tbua.iduser = tbu.iduser
                   WHERE tbu.iduser = ${iduser};`;
@@ -373,6 +376,7 @@ module.exports = {
       res.status(500).send(error);
     }
   },
+
   accountVerify: async (req, res) => {
     try {
       console.log('Check Req ===>', req.body);

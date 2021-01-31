@@ -10,7 +10,7 @@ module.exports = {
     let sqlJoin = `tbp.*, tbps.*, tbc.* FROM tbproduct tbp JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
                         JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
                         JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory
-                        WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum'`;
+                        WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum' AND tbp.is_deleted = 'false'`;
     let sqlGet = '';
 
     if (req.query.idproduct) {
@@ -30,7 +30,7 @@ module.exports = {
   getCustomProducts: async (req, res) => {
     try {
       let sqlGet = `SELECT tbp.idproduct, tbp.name, tbps.* FROM tbproduct tbp JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
-            WHERE tbps.status = 'ready' AND tbps.type_obat = 'racik';`;
+            WHERE tbps.status = 'ready' AND tbps.type_obat = 'racik' AND tbp.is_deleted = 'false'`;
 
       let results = await asyncQuery(sqlGet);
 
@@ -57,12 +57,15 @@ module.exports = {
       res.status(200).send({ category: results });
     });
   },
-
   getProductSearch: async (req, res) => {
     // console.log('req', req.query.keywordSearch.length);
     const { keyword } = req.query;
     try {
-      let sqlGet = `SELECT * FROM tbproduct WHERE name LIKE "${keyword}%"`;
+      // let sqlGet = `SELECT * FROM tbproduct WHERE name LIKE "${keyword}%" `;
+      let sqlGet = `SELECT tbp.*, tbps.*, tbc.* FROM tbproduct tbp JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
+                        JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
+                        JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory
+                        WHERE tbp.name LIKE "${keyword}%" AND tbps.status = 'ready' AND tbps.type_obat = 'umum' AND tbp.is_deleted = 'false'`;
 
       let results = await asyncQuery(sqlGet);
       res
@@ -73,7 +76,6 @@ module.exports = {
       res.status(500).send({ messages: 'Get products failed', errors: true });
     }
   },
-
   addProduct: (req, res) => {
     try {
       let sqlInsert = `INSERT INTO tbproduct SET ?`;
@@ -167,6 +169,140 @@ module.exports = {
       res
         .status(500)
         .send({ messages: 'Produk gagal ditambahkan', errors: true });
+    }
+  },
+  getAllProducts: async (req, res) => {
+    try {
+      let sqlGet = `SELECT * FROM tbproduct tbp JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
+                        JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
+                        JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory WHERE tbp.is_deleted = 'false'
+                        `;
+      let results = await asyncQuery(sqlGet);
+      console.log('=====>', results);
+      res.status(200).send({ dataProducts: results });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send(error);
+    }
+  },
+  editProduct: async (req, res) => {
+    console.log(req.body);
+    try {
+      let path = '/images';
+      const upload = uploader(path, 'file').fields([{ name: 'file' }]);
+      upload(req, res, async (error) => {
+        if (error) {
+          console.log(error);
+          res.status(500).send(error);
+        }
+
+        // upload image file
+        const { file } = req.files;
+        const filepath = file ? path + '/' + file[0].filename : null;
+        let data = JSON.parse(req.body.data);
+        let idproduct = JSON.parse(req.body.idproduct);
+        data.product_image = filepath;
+
+        console.log('===>', data, filepath, typeof idproduct);
+
+        let sqlUpdate = `UPDATE tbproduct SET ? WHERE idproduct=${pool.escape(
+          idproduct
+        )}`;
+        let sqlUpdateProductCategory = `UPDATE tbproduct_category SET ? WHERE idproduct=${pool.escape(
+          idproduct
+        )} `;
+        let sqlUpdateProductStock = `UPDATE tbproduct_stock SET ? WHERE idproduct=${pool.escape(
+          idproduct
+        )}`;
+
+        let {
+          name,
+          kategori,
+          desc_umum,
+          desc_indikasi,
+          desc_komposisi,
+          desc_dosis,
+          desc_aturanpakai,
+          desc_kontraindikasi,
+          desc_efeksamping,
+          desc_perhatian,
+          stock_pcs,
+          qty_per_pcs,
+          satuan,
+          price_pcs,
+          type_obat,
+          isPublish,
+          product_image,
+        } = data;
+
+        // Update product table
+        let dataProduct = {
+          name,
+          product_image,
+          isPublish,
+          desc_umum,
+          desc_indikasi,
+          desc_komposisi,
+          desc_dosis,
+          desc_aturanpakai,
+          desc_kontraindikasi,
+          desc_efeksamping,
+          desc_perhatian,
+        };
+        const resultsUpdateProduct = await asyncQuery(sqlUpdate, dataProduct);
+
+        // Update table product category
+        let dataProductCategory = {
+          idcategory: kategori,
+        };
+        const resultsUpdateProductCategory = await asyncQuery(
+          sqlUpdateProductCategory,
+          dataProductCategory
+        );
+
+        // Update table product stock
+        let dataProductStock = {
+          stock_pcs,
+          qty_per_pcs,
+          satuan,
+          total_stock_satuan: stock_pcs * qty_per_pcs,
+          price_pcs,
+          price_per_satuan: Math.floor(price_pcs / qty_per_pcs),
+          type_obat,
+        };
+        const resultsUpdateProductStock = await asyncQuery(
+          sqlUpdateProductStock,
+          dataProductStock
+        );
+
+        // response update products
+        res.status(200).send({
+          messages: 'Produk berhasil diupdate',
+          error: false,
+        });
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send(error);
+    }
+  },
+
+  deleteProduct: async (req, res) => {
+    try {
+      let sqlUpdate = `UPDATE tbproduct
+                       SET is_deleted = 'true'
+                       WHERE idproduct=${pool.escape(req.params.idproduct)}`;
+
+      let results = await asyncQuery(sqlUpdate);
+      if (results) {
+        res.status(200).send({
+          message: 'Produk berhasil dihapus',
+          error: false,
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500).send(error);
     }
   },
 };
