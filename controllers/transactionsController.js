@@ -3,7 +3,7 @@ const { asyncQuery } = require('../helpers/asyncQuery');
 
 module.exports = {
   addTransaction: (req, res) => {
-    console.log('addTransaction req.body: ', req.body);
+    //console.log('addTransaction req.body: ', req.body);
     let transaction_type = req.body.transaction_type;
     let abjad = 'abcdefghijklmnopqrstuvwxyz'.toUpperCase();
     let angka = '1234567890';
@@ -16,12 +16,11 @@ module.exports = {
     let tanggal = new Date().getDay();
     let bulan = new Date().getMonth();
     let tahun = new Date().getFullYear();
-    let invoice = `INV/${transaction_type}/${tahun}${bulan}${tanggal}/${
-      req.body.checkout[0].iduser
-    }${pool.escape(req.body.idcart[0])}/${number}`;
+    let invoice = `INV/${transaction_type}/${tahun}${bulan}${tanggal}/${req.body.checkout[0].iduser
+      }${pool.escape(req.body.idcart[0])}/${number}`;
 
-    console.log('invoice: ', invoice);
-    console.log('query sqlAdd: ', req.body.checkout[0].iduser, invoice);
+    //console.log('invoice: ', invoice);
+    //console.log('query sqlAdd: ', req.body.checkout[0].iduser, invoice);
 
     let sqlAdd = `INSERT INTO tbtransaction (iduser, invoice_number, ongkir, total_payment, iduser_address, transaction_type) 
         VALUES ( ${req.body.checkout[0].iduser}, ${pool.escape(
@@ -35,7 +34,7 @@ module.exports = {
     pool.query(sqlAdd, (err1, results1) => {
       if (err1) res.status(500).send(err1);
 
-      console.log('addtransaction results 1 : ', results1);
+      //console.log('addtransaction results 1 : ', results1);
       if (results1) {
         let sqlAddDetail = `INSERT INTO transaction_detail VALUES `;
 
@@ -87,13 +86,13 @@ module.exports = {
           });
         }
 
-        console.log('datatostring: ', data.toString());
-        console.log('getIDproduct stock: ', getIdProduct.toString());
+        //console.log('datatostring: ', data.toString());
+        //console.log('getIDproduct stock: ', getIdProduct.toString());
 
         pool.query(sqlAddDetail + data.toString(), (err2, results2) => {
           if (err2) res.status(500).send(err2);
 
-          console.log('results 2 : ', results2);
+          //console.log('results 2 : ', results2);
 
           // fitur mengurangi stock barang
           let sqlGetProduct = `SELECT * FROM tbproduct_stock
@@ -101,7 +100,7 @@ module.exports = {
 
           pool.query(sqlGetProduct, (err3, results3) => {
             if (err3) res.status(500).send(err3);
-            console.log('results 3 :', results3);
+            //console.log('results 3 :', results3);
 
             let sqlReduceStock1 = `INSERT into tbproduct_stock (idproduct_stock, idproduct, stock_pcs, qty_per_pcs, satuan, total_stock_satuan, 
                                                 price_pcs, price_per_satuan, status, type_obat) VALUES `;
@@ -204,7 +203,7 @@ module.exports = {
               }
             });
 
-            console.log('cek query update stock: ', update.toString());
+            //console.log('cek query update stock: ', update.toString());
 
             // (8, 8, -6, NULL, 'botol', NULL, 114500, NULL, 'ready', 'umum' ),(9, 9, -6, NULL, 'kemasan', NULL, 38500, NULL, 'ready', 'umum'),
 
@@ -236,7 +235,7 @@ module.exports = {
                     pool.query(sqlDel2, (err6, results6) => {
                       if (err6) res.status(500).send(err6);
 
-                      console.log('addtransaction test log ALL');
+                      //console.log('addtransaction test log ALL');
                       res.status(200).send({
                         message: 'Transaction Success',
                         idpayment: results1.insertId,
@@ -245,7 +244,7 @@ module.exports = {
                       });
                     });
                   } else {
-                    console.log('addtransaction test log non ALL');
+                    //console.log('addtransaction test log non ALL');
                     res.status(200).send({
                       message: 'Transaction Success',
                       idpayment: results1.insertId,
@@ -263,36 +262,42 @@ module.exports = {
   },
 
   getTransaction: (req, res) => {
-    console.log(
-      'transactionController.js getTrans params: ',
-      req.params.iduser
-    ); //1
+    // //console.log("transactionController.js getTrans params: ", req.params.iduser) //1
+    //console.log("transactionController.js getTrans iduser: ", req.user.iduser) //1
+    //console.log("transactionController.js getTrans query idtransaction: ", req.query.idtransaction) //1
 
-    let sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.params.iduser} ORDER BY idtransaction DESC;`;
+    // let sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.user.iduser} ORDER BY idtransaction DESC;`
+    let sqlGetTransaction = ``
 
-    let sqlGetProduct = `SELECT * FROM transaction_detail tr JOIN tbproduct tbp ON tbp.idproduct = tr.idproduct;`;
+    if (req.query.idtransaction) {
+      sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.user.iduser} AND idtransaction = ${req.query.idtransaction};`
+    } else {
+      sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.user.iduser} ORDER BY idtransaction DESC;`
+    }
+
+    let sqlGetProduct = `SELECT * FROM transaction_detail tr JOIN tbproduct tbp ON tbp.idproduct = tr.idproduct;`
 
     pool.query(sqlGetTransaction, (err1, results1) => {
-      if (err1) res.status(500).send(err1);
+      if (err1) res.status(500).send(err1)
 
       if (results1) {
         pool.query(sqlGetProduct, (err2, results2) => {
-          if (err2) res.status(500).send(err2);
+          if (err2) res.status(500).send(err2)
 
           results1.forEach((item, index) => {
-            let products = [];
+            let products = []
             results2.forEach((element, idx) => {
               if (item.idtransaction === element.idtransaction) {
-                products.push(element);
+                products.push(element)
               }
-            });
-            item['products'] = products;
-          });
+            })
+            item['products'] = products
+          })
 
-          res.status(200).send({ transactions: results1 });
-        });
+          res.status(200).send({ transactions: results1 })
+        })
       }
-    });
+    })
   },
 
   payment: (req, res) => {
@@ -315,7 +320,7 @@ module.exports = {
                                     order by tt.created_at desc;`;
 
       let results = await asyncQuery(sqlGetAllTrx);
-      // console.log('=====>', results);
+      // //console.log('=====>', results);
       res.status(200).send({ dataTrx: results });
     } catch (error) {
       console.log(error);
@@ -335,7 +340,7 @@ module.exports = {
                                     order by tt.created_at desc;`;
 
       let results = await asyncQuery(sqlGetAllDetailTrx);
-      // console.log('=====>', results);
+      // //console.log('=====>', results);
       res.status(200).send({ dataTrx: results });
     } catch (error) {
       console.log(error);

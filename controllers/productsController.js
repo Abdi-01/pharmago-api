@@ -4,8 +4,8 @@ const { uploader } = require('../helpers/uploader');
 
 module.exports = {
   getProducts: (req, res) => {
-    console.log('getProducts req.query.idproduct: ', req.query.idproduct);
-    console.log('getProducts req.query.idcategory: ', req.query.idcategory);
+    // //console.log('getProducts req.query.idproduct: ', req.query.idproduct);
+    // //console.log('getProducts req.query.idcategory: ', req.query.idcategory);
 
     let sqlJoin = `tbp.*, tbps.*, tbc.* FROM tbproduct tbp JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
                         JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
@@ -58,7 +58,7 @@ module.exports = {
     });
   },
   getProductSearch: async (req, res) => {
-    // console.log('req', req.query.keywordSearch.length);
+    // //console.log('req', req.query.keywordSearch.length);
     const { keyword } = req.query;
     try {
       // let sqlGet = `SELECT * FROM tbproduct WHERE name LIKE "${keyword}%" `;
@@ -178,7 +178,7 @@ module.exports = {
                         JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory WHERE tbp.is_deleted = 'false'
                         `;
       let results = await asyncQuery(sqlGet);
-      console.log('=====>', results);
+      //console.log('=====>', results);
       res.status(200).send({ dataProducts: results });
     } catch (error) {
       console.log(error);
@@ -186,7 +186,7 @@ module.exports = {
     }
   },
   editProduct: async (req, res) => {
-    console.log(req.body);
+    //console.log(req.body);
     try {
       let path = '/images';
       const upload = uploader(path, 'file').fields([{ name: 'file' }]);
@@ -203,7 +203,7 @@ module.exports = {
         let idproduct = JSON.parse(req.body.idproduct);
         data.product_image = filepath;
 
-        console.log('===>', data, filepath, typeof idproduct);
+        //console.log('===>', data, filepath, typeof idproduct);
 
         let sqlUpdate = `UPDATE tbproduct SET ? WHERE idproduct=${pool.escape(
           idproduct

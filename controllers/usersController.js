@@ -8,7 +8,7 @@ const Crypto = require('crypto');
 module.exports = {
   registerUser: async (req, res) => {
     try {
-      console.log(req.body.data);
+      //console.log(req.body.data);
       let {
         name,
         email,
@@ -41,9 +41,9 @@ module.exports = {
       let allUser = await asyncQuery(sqlGet);
       let userActive = allUser.filter((user) => user.email == email);
 
-      console.log('check OTP', OTP);
-      console.log('check hashPassword', hashPassword);
-      console.log('check userActive', userActive);
+      //console.log('check OTP', OTP);
+      //console.log('check hashPassword', hashPassword);
+      //console.log('check userActive', userActive);
 
       let dataUserRegistrasi = {
         name,
@@ -55,7 +55,7 @@ module.exports = {
 
       if (userActive.length == 0) {
         let results = await asyncQuery(sqlInsert, dataUserRegistrasi);
-        console.log('check results user', results);
+        //console.log('check results user', results);
 
         let dataUserAddress = {
           iduser: results.insertId,
@@ -71,7 +71,7 @@ module.exports = {
           dataUserAddress
         );
 
-        // console.log('check results address', resultsAddress);
+        // //console.log('check results address', resultsAddress);
 
         let sqlGetUser = `SELECT * FROM tbuser WHERE iduser=${results.insertId}`;
         let resultGetUser = await asyncQuery(sqlGetUser);
@@ -94,7 +94,7 @@ module.exports = {
             isActive,
           });
 
-          // console.log('check token', token);
+          // //console.log('check token', token);
 
           // handlebar setting
           const handlebarsOption = {
@@ -125,12 +125,12 @@ module.exports = {
 
           transporter.sendMail(mail, (err, res) => {
             if (err) {
-              console.log(err);
+              //console.log(err);
               return res.status(500).send(err);
             }
           });
 
-          console.log('check resultGetUser', resultGetUser);
+          //console.log('check resultGetUser', resultGetUser);
 
           res.status(200).send({
             message: 'Registrasi berhasil',
@@ -158,7 +158,7 @@ module.exports = {
       let hashPassword = Crypto.createHmac('sha256', 'xxQWd#@')
         .update(password)
         .digest('hex');
-      console.log('mas alx', hashPassword);
+      //console.log('mas alx', hashPassword);
 
       let sqlGetAll = `SELECT * FROM tbuser`;
       let sqlGet = `SELECT *  FROM tbuser 
@@ -181,7 +181,7 @@ module.exports = {
           });
         } else {
           let results = await asyncQuery(sqlGet);
-          console.log('==>', results.length);
+          //console.log('==>', results.length);
           if (results.length > 0) {
             // if the user has verified
             if (results[0].isActive) {
@@ -202,7 +202,7 @@ module.exports = {
                 isActive,
               });
 
-              console.log('check result ====> ', results[0]);
+              //console.log('check result ====> ', results[0]);
               res.status(200).send({
                 message: 'Login berhasil',
                 user: results[0],
@@ -244,7 +244,7 @@ module.exports = {
       // check active email
       let allUsers = await asyncQuery(sqlGetAll);
       let userActive = allUsers.filter((user) => user.email == email);
-      console.log(userActive);
+      //console.log(userActive);
       if (userActive.length > 0) {
         let results = await asyncQuery(sqlGet);
         if (results.length > 0) {
@@ -278,10 +278,10 @@ module.exports = {
 
           transporter.sendMail(mail, (errorMail, resultsMail) => {
             if (errorMail) {
-              console.log(errorMail);
+              //console.log(errorMail);
               return res.status(500).send(errorMail);
             }
-            console.log('email', results);
+            //console.log('email', results);
           });
           res.status(200).send({
             message: 'Reset email sudah terkirim',
@@ -305,7 +305,7 @@ module.exports = {
 
   resetPassword: async (req, res) => {
     try {
-      console.log('Check Req ===>', req.body);
+      //console.log('Check Req ===>', req.body);
       const { password, iduser } = req.body;
 
       // encrypt password
@@ -333,7 +333,7 @@ module.exports = {
   keepLogin: async (req, res) => {
     try {
       const { iduser } = req.user;
-      console.log('check keepLogin', iduser);
+      //console.log('check keepLogin', iduser);
       let sqlGet = `SELECT *
                         FROM tbuser
                         WHERE iduser = ${iduser}`;
@@ -364,7 +364,7 @@ module.exports = {
   },
   getDefaultAddress: async (req, res) => {
     try {
-      console.log('cekgetdefaultadress params: ', req.user.iduser);
+      //console.log('cekgetdefaultadress params: ', req.user.iduser);
       const { iduser } = req.user;
       let sqlGet = `SELECT * FROM tbuser_address tbua JOIN tbuser tbu ON tbua.iduser = tbu.iduser
                   WHERE tbu.iduser = ${iduser};`;
@@ -379,7 +379,7 @@ module.exports = {
 
   accountVerify: async (req, res) => {
     try {
-      console.log('Check Req ===>', req.body);
+      //console.log('Check Req ===>', req.body);
       const { otp } = req.body;
 
       let sqlUpdate = `UPDATE tbuser
