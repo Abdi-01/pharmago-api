@@ -88,6 +88,7 @@ module.exports = {
     },
     deleteCart: async (req, res) => {
         try {
+            let sqlDel = `DELETE FROM tbcart WHERE idcartm = ${req.params.idcart}; `
             console.log('cek idcart deleteCart controller: ', req.params.idcart)
             let results = await asyncQuery(sqlDel);
 
