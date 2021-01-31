@@ -169,9 +169,18 @@ module.exports = ({
     },
 
     getTransaction: (req, res) => {
-        console.log("transactionController.js getTrans params: ", req.params.iduser) //1
+        // console.log("transactionController.js getTrans params: ", req.params.iduser) //1
+        console.log("transactionController.js getTrans iduser: ", req.user.iduser) //1
+        console.log("transactionController.js getTrans query idtransaction: ", req.query.idtransaction) //1
 
-        let sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.params.iduser} ORDER BY idtransaction DESC;`
+        // let sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.user.iduser} ORDER BY idtransaction DESC;`
+        let sqlGetTransaction = ``
+
+        if (req.query.idtransaction) {
+            sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.user.iduser} AND idtransaction = ${req.query.idtransaction};`
+        } else {
+            sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.user.iduser} ORDER BY idtransaction DESC;`
+        }
 
         let sqlGetProduct = `SELECT * FROM transaction_detail tr JOIN tbproduct tbp ON tbp.idproduct = tr.idproduct;`
 

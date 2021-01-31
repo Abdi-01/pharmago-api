@@ -58,7 +58,7 @@ module.exports = {
             JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
             JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
             JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory
-            WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum' AND tbca.isActive = 1                             
+            WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum' AND tbca.isActive = 1  AND tbp.is_deleted = 'false'                            
             AND tbca.iduser = ${req.user.iduser}; `;
 
             let results = await asyncQuery(sqlGet);
@@ -73,10 +73,10 @@ module.exports = {
         console.log('cek iduser getcustomcart controller: ', req.user.iduser)
         try {
             let sqlGet = `SELECT * FROM tbcartCustom tbcc JOIN tbcartCustom_detail tbccd
-ON tbcc.idcartCustom = tbccd.idcartCustom
-JOIN tbproduct tbp ON tbp.idproduct = tbccd.idproduct
-WHERE tbcc.isActive = 1
-AND tbcc.iduser = ${req.user.iduser}; `
+                ON tbcc.idcartCustom = tbccd.idcartCustom
+                JOIN tbproduct tbp ON tbp.idproduct = tbccd.idproduct
+                WHERE tbcc.isActive = 1
+                AND tbcc.iduser = ${req.user.iduser}; `
 
             let results = await asyncQuery(sqlGet);
 
@@ -116,16 +116,16 @@ AND tbcc.iduser = ${req.user.iduser}; `
     updateCart: (req, res) => {
         console.log('cek req.body updatecart: ', req.body, req.params.idcart)
         let sqlget = `SELECT * FROM tbcart tbc JOIN tbproduct_stock tbps ON tbc.idproduct = tbps.idproduct
-WHERE tbc.idcart = ${req.params.idcart}; `
+                    WHERE tbc.idcart = ${req.params.idcart}; `
 
         pool.query(sqlget, (err1, results1) => {
             if (err1) res.status(500).send(err)
             let sqlGet2 = `SELECT tbp.*, tbps.*, tbc.*, tbca.* FROM tbproduct tbp JOIN tbcart tbca ON tbp.idproduct = tbca.idproduct
-JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
-JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
-JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory
-WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum' AND tbca.isActive = 1
-AND tbca.iduser = ${results1[0].iduser}; `
+                    JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
+                    JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
+                    JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory
+                    WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum' AND tbca.isActive = 1  AND tbp.is_deleted = 'false'
+                    AND tbca.iduser = ${results1[0].iduser}; `
             if (req.body.qty > 0 && req.body.qty <= results1[0].stock_pcs) {
                 let sqlUpdate = `UPDATE tbcart SET qty = ${req.body.qty} WHERE idcart = ${req.params.idcart}; `
 

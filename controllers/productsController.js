@@ -4,13 +4,13 @@ const { uploader } = require('../helpers/uploader');
 
 module.exports = {
   getProducts: (req, res) => {
-    console.log('getProducts req.query.idproduct: ', req.query.idproduct);
-    console.log('getProducts req.query.idcategory: ', req.query.idcategory);
+    // console.log('getProducts req.query.idproduct: ', req.query.idproduct);
+    // console.log('getProducts req.query.idcategory: ', req.query.idcategory);
 
     let sqlJoin = `tbp.*, tbps.*, tbc.* FROM tbproduct tbp JOIN tbproduct_stock tbps ON tbp.idproduct = tbps.idproduct
                         JOIN tbproduct_category tbpc ON tbp.idproduct = tbpc.idproduct
                         JOIN tbcategory tbc ON tbc.idcategory = tbpc.idcategory
-                        WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum'`;
+                        WHERE tbps.status = 'ready' AND tbps.type_obat = 'umum' AND tbp.is_deleted = 'false'`;
     let sqlGet = '';
 
     if (req.query.idproduct) {
@@ -62,7 +62,7 @@ module.exports = {
     // console.log('req', req.query.keywordSearch.length);
     const { keyword } = req.query;
     try {
-      let sqlGet = `SELECT * FROM tbproduct WHERE name LIKE "${keyword}%"`;
+      let sqlGet = `SELECT * FROM tbproduct WHERE name LIKE "${keyword}% " AND tbp.is_deleted = 'false'`;
 
       let results = await asyncQuery(sqlGet);
       res
