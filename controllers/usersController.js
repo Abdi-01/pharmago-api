@@ -117,7 +117,7 @@ module.exports = {
             context: {
               name: name,
               otp: OTP,
-              link: `http://localhost:3000/verify/${token}`,
+              link: `http://pharmago.codeaddict.my.id/verify/${token}`,
               image:
                 'https://res.cloudinary.com/azouz/image/upload/v1611285010/pharmago/logo-pharmago_cfqqrs.png',
             },
@@ -270,7 +270,7 @@ module.exports = {
             template: 'resetPassword', // nama file html
             context: {
               name: name,
-              link: `http://localhost:3000/reset-password/${iduser}`,
+              link: `http://pharmago.codeaddict.my.id/reset-password/${iduser}`,
               image:
                 'https://res.cloudinary.com/azouz/image/upload/v1611285010/pharmago/logo-pharmago_cfqqrs.png',
             },
