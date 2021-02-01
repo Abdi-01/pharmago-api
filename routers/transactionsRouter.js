@@ -4,6 +4,7 @@ const transactionsController = require('../controllers/transactionsController');
 const { readToken } = require('../helpers/tokenRead');
 
 
+router.post('/quickbuy', transactionsController.quickBuy);
 router.post('/add', transactionsController.addTransaction);
 router.get('/', readToken, transactionsController.getTransaction);
 router.get('/all', transactionsController.getAllTransaction);

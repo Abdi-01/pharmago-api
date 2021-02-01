@@ -3,13 +3,48 @@ const { asyncQuery } = require('../helpers/asyncQuery');
 
 module.exports = {
     addCart: (req, res) => {
-        //console.log('addcart req.body: ', req.body);
-        let sqlInsert = `INSERT into tbcart SET ?`;
+        console.log('addcart req.body: ', req.body);
+        let sqlGet = `SELECT * FROM tbcart WHERE iduser = ${req.body.iduser} AND isActive = 1;`
 
-        pool.query(sqlInsert, req.body, (err, results) => {
-            if (err) //console.log(err);
+        pool.query(sqlGet, (err, results) => {
+            console.log('results :', results)
+            if (results) {
+                let newQty = 0
+                results.forEach((item, index) => {
+                    if (item.idproduct === req.body.idproduct) {
+                        newQty = item.qty + req.body.qty
+                    }
+                })
 
-            res.status(200).send({ message: 'Add to Cart Success' });
+                if (newQty !== 0) {
+                    let sqlUpdate = `UPDATE tbcart SET qty = ${newQty} WHERE idproduct = ${req.body.idproduct};`
+
+                    pool.query(sqlUpdate, (err2, results2) => {
+                        if (err2) {
+                            console.log(err2)
+                        }
+
+                            res.status(200).send({ message: 'Add to Cart Success' });
+                    })
+
+                } else {
+                    let sqlInsert = `INSERT into tbcart SET ?`;
+
+                    pool.query(sqlInsert, req.body, (err2, results2) => {
+                        if (err2) //console.log(err);
+
+                            res.status(200).send({ message: 'Add to Cart Success' });
+                    })
+                }
+            } else {
+                let sqlInsert = `INSERT into tbcart SET ?`;
+                console.log('cek addcart')
+                pool.query(sqlInsert, req.body, (err2, results2) => {
+                    if (err2) //console.log(err);
+
+                        res.status(200).send({ message: 'Add to Cart Success' });
+                })
+            }
         });
     },
     addCustomCart: (req, res) => {
