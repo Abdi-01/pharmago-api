@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors'); // memberikan atau menolak akses, middleware
 const bodyParser = require('body-parser'); //membaca body/data dari user request
 const bearerToken = require('express-bearer-token'); // Agar secret key (token) tidak kelihatan
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 const App = express();
 
 App.use(cors()); // jika tidak disetting lagi, berarti semua bisa mengakses
