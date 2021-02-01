@@ -16,8 +16,9 @@ module.exports = {
     let tanggal = new Date().getDay();
     let bulan = new Date().getMonth();
     let tahun = new Date().getFullYear();
-    let invoice = `INV/${transaction_type}/${tahun}${bulan}${tanggal}/${req.body.checkout[0].iduser
-      }${pool.escape(req.body.idcart[0])}/${number}`;
+    let invoice = `INV/${transaction_type}/${tahun}${bulan}${tanggal}/${
+      req.body.checkout[0].iduser
+    }${pool.escape(req.body.idcart[0])}/${number}`;
 
     //console.log('invoice: ', invoice);
     //console.log('query sqlAdd: ', req.body.checkout[0].iduser, invoice);
@@ -267,37 +268,37 @@ module.exports = {
     //console.log("transactionController.js getTrans query idtransaction: ", req.query.idtransaction) //1
 
     // let sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.user.iduser} ORDER BY idtransaction DESC;`
-    let sqlGetTransaction = ``
+    let sqlGetTransaction = ``;
 
     if (req.query.idtransaction) {
-      sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.user.iduser} AND idtransaction = ${req.query.idtransaction};`
+      sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.user.iduser} AND idtransaction = ${req.query.idtransaction};`;
     } else {
-      sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.user.iduser} ORDER BY idtransaction DESC;`
+      sqlGetTransaction = `SELECT * FROM tbtransaction WHERE iduser = ${req.user.iduser} ORDER BY idtransaction DESC;`;
     }
 
-    let sqlGetProduct = `SELECT * FROM transaction_detail tr JOIN tbproduct tbp ON tbp.idproduct = tr.idproduct;`
+    let sqlGetProduct = `SELECT * FROM transaction_detail tr JOIN tbproduct tbp ON tbp.idproduct = tr.idproduct;`;
 
     pool.query(sqlGetTransaction, (err1, results1) => {
-      if (err1) res.status(500).send(err1)
+      if (err1) res.status(500).send(err1);
 
       if (results1) {
         pool.query(sqlGetProduct, (err2, results2) => {
-          if (err2) res.status(500).send(err2)
+          if (err2) res.status(500).send(err2);
 
           results1.forEach((item, index) => {
-            let products = []
+            let products = [];
             results2.forEach((element, idx) => {
               if (item.idtransaction === element.idtransaction) {
-                products.push(element)
+                products.push(element);
               }
-            })
-            item['products'] = products
-          })
+            });
+            item['products'] = products;
+          });
 
-          res.status(200).send({ transactions: results1 })
-        })
+          res.status(200).send({ transactions: results1 });
+        });
       }
-    })
+    });
   },
 
   payment: (req, res) => {
@@ -311,16 +312,11 @@ module.exports = {
 
   getAllTransaction: async (req, res) => {
     try {
-      let sqlGetAllTrx = `SELECT tu.*, tt.*, tu.name as customer, td.*, tp.*, ta.*, ts.* FROM tbtransaction tt 
+      let sqlGetAllTrx = `SELECT tu.*, tt.*, tu.name as customer FROM tbtransaction tt 
                                     JOIN tbuser tu ON tt.iduser = tu.iduser
-                                    JOIN transaction_detail td ON tt.idtransaction = td.idtransaction
-                                    JOIN tbproduct tp ON td.idproduct = tp.idproduct 
-                                    JOIN tbuser_address ta ON tu.iduser = ta.iduser
-                                    JOIN tbproduct_stock ts ON tp.idproduct = ts.idproduct
                                     order by tt.created_at desc;`;
 
       let results = await asyncQuery(sqlGetAllTrx);
-      // //console.log('=====>', results);
       res.status(200).send({ dataTrx: results });
     } catch (error) {
       console.log(error);
@@ -340,8 +336,42 @@ module.exports = {
                                     order by tt.created_at desc;`;
 
       let results = await asyncQuery(sqlGetAllDetailTrx);
-      // //console.log('=====>', results);
       res.status(200).send({ dataTrx: results });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send(error);
+    }
+  },
+
+  getReportTrx: async (req, res) => {
+    try {
+      let sqlGetTrx = `SELECT td.idproduct, tp.name, sum(td.qty_co) as qty_terjual FROM tbtransaction tt
+                                            JOIN transaction_detail td ON tt.idtransaction = td.idtransaction
+                                            JOIN tbproduct_stock ts ON td.idproduct = ts.idproduct
+                                            JOIN tbproduct tp ON ts.idproduct = tp.idproduct
+                                            WHERE ts.type_obat = 'racik'
+                                            GROUP BY td.idproduct
+                                            ORDER BY td.idproduct`;
+
+      let results = await asyncQuery(sqlGetTrx);
+      res.status(200).send({ reportData: results });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send(error);
+    }
+  },
+
+  getReportChart: async (req, res) => {
+    try {
+      let sqlGet = `SELECT date_format(tt.created_at, '%M') AS bulan, sum(floor(tt.total_payment)) as total_penjualan_per_bulan FROM tbtransaction tt
+                                      JOIN transaction_detail td ON tt.idtransaction = td.idtransaction
+                                      JOIN tbproduct_stock ts ON td.idproduct = ts.idproduct
+                                      JOIN tbproduct tp ON ts.idproduct = tp.idproduct
+                                      WHERE tt.payment_status = 'paid'
+                                      GROUP BY  date_format(tt.created_at, '%M') 
+                                      ORDER BY  date_format(tt.created_at, '%M')`;
+      let results = await asyncQuery(sqlGet);
+      res.status(200).send({ reportData: results });
     } catch (error) {
       console.log(error);
       res.status(500).send(error);
