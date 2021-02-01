@@ -191,7 +191,8 @@ module.exports = {
     },
     updateNote: async (req, res) => {
         try {
-            let sqlUpdate = `UPDATE tbcart SET note = ${req.body.note} WHERE idcart = ${req.params.idcart}; `;
+            console.log('cek bawaan updatenote', req.params.idcart, req.body.note)
+            let sqlUpdate = `UPDATE tbcart SET note = ${pool.escape(req.body.note)} WHERE idcart = ${req.params.idcart}; `;
             let results = await asyncQuery(sqlUpdate);
 
             // res.status(200).send({ cartUser: results })
